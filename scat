@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e
+
+[ -e ~/s-* ] && echo "${0##*/}: there are ~/s-*" >&2 && exit 1
+
+[ $# != 1 ] && echo "Usage: ${0##*/} FILE" >&2 && exit 1
+
+! [[ "$1" =~ \.zip$ ]] && echo "${0##*/}: $1: wrong extension" >&2 && exit 1
+
+DIR="$(mktemp -dp ~ s-XXXXXXXXXX)"
+! unzip -q "$1" -d "$DIR" && rmdir "$DIR" && exit 1
+
+if [ "$(ls -A "$DIR")" != txt.txt ]; then
+	echo "${0##*/}: $1: archive must contain file \"txt.txt\" only" >&2
+	rm -r "$DIR"
+	exit 1
+fi
+
+! cat "$DIR/txt.txt" && rm -r "$DIR" && exit 1
+
+rm -r "$DIR"

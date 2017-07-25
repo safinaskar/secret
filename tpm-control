@@ -1,0 +1,9 @@
+PACKAGE='safinaskar/secret'
+ARCH='all'
+
+DEPENDS='prog:bash:bash prog:mktemp:coreutils prog:unzip:unzip prog:emacs:emacs-nox prog:zip:zip prog:sync:coreutils'
+BUILD_DEPENDS='prog:cmake:cmake prog:make:make'
+LIBS=''
+INSTALL='[ -e CMakeCache.txt ] && echo "Failed: CMakeCache.txt" && exit 1;'\
+\
+'cd "$BUILD" && cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" "$SRC" && make install'

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+[ -e ~/s-* ] && echo "${0##*/}: there are ~/s-*" >&2 && exit 1
+
+[ $# != 1 ] && echo "Usage: ${0##*/} FILE" >&2 && exit 1
+
+! [[ "$1" =~ \.zip$ ]] && echo "${0##*/}: $1: wrong extension" >&2 && exit 1
+
+[ -f "$1" ] && echo "${0##*/}: $1: exists" >&2 && exit 1
+
+DIR="$(mktemp -dp ~ s-XXXXXXXXXX)"
+cat > "$DIR/txt.txt"
+
+printf "Syncing... "
+sync
+printf "done\n"
+
+if ! zip -ejq "$1" "$DIR/txt.txt"; then
+	if ! zip -ejq "$1"  "$DIR/txt.txt"; then
+		echo "${0##*/}: $1: Compressing failed. File is \"$DIR/txt.txt\"" >&2
+		exit 1
+	fi
+fi
+
+rm -r "$DIR"
+
+printf "Syncing... "
+sync
+printf "done\n"
