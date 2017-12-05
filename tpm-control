@@ -1,7 +1,17 @@
 PACKAGE='safinaskar/secret'
 ARCH='all'
 
-DEPENDS='prog:bash:bash prog:mktemp:coreutils prog:unzip:unzip prog:emacs:emacs-nox prog:zip:zip prog:sync:coreutils'
+DEPENDS=""
+
+# es
+DEPENDS="$DEPENDS safinaskar/sh201708 prog:readlink:coreutils prog:sync:coreutils prog:mktemp:coreutils prog:unzip:unzip prog:emacs:emacs-nox prog:zip:zip"
+
+# mks
+DEPENDS="$DEPENDS safinaskar/sh201708 prog:mktemp:coreutils prog:zip:zip"
+
+# scat
+DEPENDS="$DEPENDS prog:bash:bash prog:mktemp:coreutils prog:unzip:unzip"
+
 BUILD_DEPENDS='prog:cmake:cmake prog:make:make'
 LIBS=''
 INSTALL='[ -e CMakeCache.txt ] && echo "Failed: CMakeCache.txt" && exit 1;'\

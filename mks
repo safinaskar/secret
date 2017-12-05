@@ -1,31 +1,57 @@
-#!/bin/bash
+#!/bin/sh
 
-set -e
+{
+	set -e
 
-[ -e ~/s-* ] && echo "${0##*/}: there are ~/s-*" >&2 && exit 1
+	. sh201708.sh
 
-[ $# != 1 ] && echo "Usage: ${0##*/} FILE" >&2 && exit 1
+	usage(){
+		cat << EOF
+Usage: ${0##*/} [--] FILE
+Exception safe
+EOF
+	}
 
-! [[ "$1" =~ \.zip$ ]] && echo "${0##*/}: $1: wrong extension" >&2 && exit 1
+	while [ "${1#-}" != "$1" ]; do
+		case "$1" in
+			"--help")
+				usage
+				exit 0
+				;;
+			"--")
+				shift
+				break
+				;;
+			*)
+				usage >&2
+				exit 1
+				;;
+		esac
+	done
 
-[ -f "$1" ] && echo "${0##*/}: $1: exists" >&2 && exit 1
+	[ $# != 1 ] && usage >&2 && exit 1
 
-DIR="$(mktemp -dp ~ s-XXXXXXXXXX)"
-cat > "$DIR/txt.txt"
+	FILE="$(sh201708_to_safe -- "$1")"
 
-printf "Syncing... "
-sync
-printf "done\n"
+	sh201708_assert_cmd mktemp # prog:mktemp:coreutils
+	sh201708_assert_cmd zip # prog:zip:zip
 
-if ! zip -ejq "$1" "$DIR/txt.txt"; then
-	if ! zip -ejq "$1"  "$DIR/txt.txt"; then
-		echo "${0##*/}: $1: Compressing failed. File is \"$DIR/txt.txt\"" >&2
+	[ "${FILE%.zip}" = "$FILE" ] && printf -- '%s\n' "${0##*/}: $FILE: not a *.zip" >&2 && exit 1
+
+	[ -L "$FILE" ] && printf -- '%s\n' "${0##*/}: $FILE: symlink" >&2 && exit 1
+
+	[ -e "$FILE" ] && printf -- '%s\n' "${0##*/}: $FILE: exists" >&2 && exit 1
+
+	TEMP="$(mktemp --directory --tmpdir as-secret-mks-XXXXXX)"
+	trap 'rm -r "$TEMP"' EXIT
+	trap 'exit 1' $SH201708_SIGNALS
+
+	: > "$TEMP/txt.txt"
+
+	if ! zip --encrypt --junk-paths --quiet "$FILE" "$TEMP/txt.txt"; then
+		printf -- '%s\n' "Если zip выдал ошибку \"Invalid command arguments (password verification failed)\", значит, пароль повторён неверно"
 		exit 1
 	fi
-fi
 
-rm -r "$DIR"
-
-printf "Syncing... "
-sync
-printf "done\n"
+	exit 0
+}
